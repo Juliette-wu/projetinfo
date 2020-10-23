@@ -1,2 +1,3 @@
-def abc():
-    return()
+Pojet Info
+"Mesurer les similarités"
+
