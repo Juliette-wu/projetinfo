@@ -2,7 +2,8 @@
 "Mesurer les similarités"
 
 from math import *
-
+from matplotlib.pyplot import *
+from numpy import *
 
 def tab_capteurs():
     T1,T2,T3,T4,T5,T6=[],[],[],[],[],[]   #tableaux corespondant aux 6 capteurs
@@ -31,7 +32,7 @@ def tab_capteurs():
     E.close()
     return(T1,T2,T3,T4,T5,T6)
 
-def tri(L):
+def tri(L): #tri rapide
     if len(L)<=1:
         return(L)
     p=L[0]
@@ -61,8 +62,44 @@ def valeurs_stats(L):
         Z=(X[int(n/2)-1]+X[int(n/2)])/2
     else:
         Z=X[int(n/2)]
+    E=round(E,1)
+    O=round(O,1)
+    return(m,M,E,O,Z)
     print('minimum :',m)
     print('maximum :',M)
     print('espérance :',E)
     print('écart-type :',O)
     print('médiane :',Z)
+    
+def courbe_simple(X,Y,a,b,c):
+    m,M,E,O,Z=valeurs_stats(Y)
+    m,M,E,O,Z=str(m),str(M),str(E),str(O),str(Z)
+    f=figure()
+    ax = f.add_subplot(111)
+    text(0.87,0.87,'minimum : '+m+'\n'+'maximum : '+M+'\n'+'espérance : '+E+'\n'+'écart-type : '+O+'\n'+'médiane : '+Z,horizontalalignment='center',verticalalignment='center',transform=ax.transAxes)
+    plot(X,Y)
+    xlabel(a)
+    ylabel(b)
+    title(c)
+    xticks(X[::50],rotation=-90)
+    show()
+
+def test():
+    C1,C2,C3,C4,C5,C6=tab_capteurs()
+    X,Y=[],[]
+    n=len(C1)
+    for k in range(n):
+        Y.append(C1[k][1])
+        X.append(C1[k][5])
+    return(courbe_simple(X,Y,'temps','température','courbe'))
+    
+def corrélation(L,P):
+    n,S=len(L),0
+    for k in range(n):
+        S=S+L[k]*P[k]
+    E=S/n
+    m_L,M_L,E_L,O_L,Z_L=valeurs_stats(L)
+    m_P,M_P,E_P,O_P,Z_P=valeurs_stats(P)
+    return((E-E_L*E_P)/(O_L*O_P))
+
+#faire les fonctions humidex, finales, bonus
