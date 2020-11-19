@@ -101,7 +101,7 @@ def corrélation(L,P):
     E=S/n
     m_L,M_L,E_L,O_L,Z_L=valeurs_stats(L)
     m_P,M_P,E_P,O_P,Z_P=valeurs_stats(P)
-    return((E-E_L*E_P)/(O_L*O_P))
+    return(round((E-E_L*E_P)/(O_L*O_P),3))
 
 def humidex(T,H):
     n=len(T)
@@ -115,13 +115,13 @@ def graph_corrélation(X,L,P,a,l,p,t):
     c=str(c)
     f=figure()
     ax = f.add_subplot(111)
-    text(0.87,0.87,'corrélation : '+c,transform=ax.transAxes)
-    plot(X,L,label='l')
-    plot(X,P,label='p')
+    text(0.7,0.77,'corrélation : '+c,transform=ax.transAxes)
+    plot(X,L,label=l)
+    plot(X,P,label=p)
     legend()
     xlabel(a)
     title(t)
-    xticks(X[::50],rotation=-90)
+    xticks(X[::50],rotation=-85)
     show()
 
 def dt(t):
@@ -129,42 +129,53 @@ def dt(t):
     h,mi,s=int(t[11:13]),int(t[14:16]),int(t[17:19])
     return(datetime(a,m,j,h,mi,s))
 
-def limitation_temps(td,tf): #td : date du début / tf : date de fin
-    C1,C2,C3,C4,C5,C6=tab_capteurs()
-    T1,T2,T3,T4,T5,T6=[],[],[],[],[],[]
-    i=0
-    for k in range(1,7):
-        while dt(Ck[i][5])<tf:
-            while dt(Ck[i][5])<td:
-                i=i+1
-            Tk.append(Ck[i])
+def limitation_temps(C,td,tf):
+    T,i=[],0
+    while dt(C[i][5])<tf:
+        while dt(C[i][5])<=td:
             i=i+1
-    return(T1,T2,T3,T4,T5,T6)    
+        T.append(C[i])
+        i=i+1
+    return(T)
+
+def limitation_temps_totale(td,tf): #td : date du début / tf : date de fin
+    C1,C2,C3,C4,C5,C6=tab_capteurs()
+    return(limitation_temps(C1,td,tf),limitation_temps(C2,td,tf),limitation_temps(C3,td,tf),limitation_temps(C4,td,tf),limitation_temps(C5,td,tf),limitation_temps(C6,td,tf))    
 
 def test2(td,tf): #test de la fonction graph_corrélation avec des valeurs du fichier csv entre deux instants
-    C1,C2,C3,C4,C5,C6=limitation_temps(td,tf)
+    C1,C2,C3,C4,C5,C6=limitation_temps_totale(td,tf)
     X,L,P=[],[],[]
     n=len(C1)
     for k in range(n):
-        Y.append(C1[k][1])
-        X.append(C1[k][5])
+        L.append(C1[k][1])
+        T=C1[k][5]
+        X.append(T[5:19])
         P.append(C2[k][1])
     return(graph_corrélation(X,L,P,'temps','température C1','température C2','corrélation température entre C1 et C2'))
 
+def séparation(C,n):
+    B,T,H,L,D=[],[],[],[],[]
+    for i in range(n):
+        B.append(C[i][0])
+        T.append(C[i][1])
+        H.append(C[i][2])
+        L.append(C[i][3])
+        D.append(C[i][4])
+    return(B,T,H,L,D)
+
 def mesure_similarités(td,tf):
-    C1,C2,C3,C4,C5,C6=limitation_temps(td,tf)
-    n=len(C1)
+    C1,C2,C3,C4,C5,C6=limitation_temps_totale(td,tf)
+    n=min([len(C1),len(C2),len(C3),len(C4),len(C5),len(C6)])
     X=[]
     for i in range(n):
-        X.append(C1[i][5])
-    for k in range(1,7):
-        Bk,Tk,Hk,Lk,Dk=[],[],[],[],[]
-        for i in range(n):
-            Bk.append(Ck[i][0])
-            Tk.append(Ck[i][1])
-            Hk.append(Ck[i][2])
-            Lk.append(Ck[i][3])
-            Dk.append(Ck[i][4])
+        x=C6[i][5]
+        X.append(x[5:19])
+    B1,T1,H1,L1,D1=séparation(C1,n)
+    B2,T2,H2,L2,D2=séparation(C2,n)
+    B3,T3,H3,L3,D3=séparation(C3,n)
+    B4,T4,H4,L4,D4=séparation(C4,n)
+    B5,T5,H5,L5,D5=séparation(C5,n)
+    B6,T6,H6,L6,D6=séparation(C6,n)
     # Bruit :
     c12=corrélation(B1,B2)
     c12=str(c12)
@@ -196,9 +207,9 @@ def mesure_similarités(td,tf):
     c46=str(c46)
     c56=corrélation(B5,B6)
     c56=str(c56)
-    f=figure()
+    f=figure(figsize=(20,6), dpi=80)
     ax = f.add_subplot(111)
-    text(0.87,0.87,'c12 : '+c12+'; c13 : '+c13+'; c14 : '+c14+'; c15 : '+c15+'; c16 : '+c16+'; c23 : '+c23+'; c24 : '+c24+'; c25 : '+c25+'; c26 : '+c26+'; c34 : '+c34+'; c35 : '+c35+'; c36 : '+c36+'; c45 : '+c45+'; c46 : '+c46+'; c56 : '+c56,transform=ax.transAxes)
+    text(0.15,0.95,'c12 : '+c12+'; c13 : '+c13+'; c14 : '+c14+'; c15 : '+c15+'; c16 : '+c16+'; c23 : '+c23+'; c24 : '+c24+'; c25 : '+c25+'; c26 : '+c26+'; c34 : '+c34+'; c35 : '+c35+'; c36 : '+c36+'; c45 : '+c45+'; c46 : '+c46+'; c56 : '+c56,transform=ax.transAxes)
     plot(X,B1,label='Capteur 1')
     plot(X,B2,label='Capteur 2')
     plot(X,B3,label='Capteur 3')
@@ -208,6 +219,49 @@ def mesure_similarités(td,tf):
     legend()
     xlabel('temps')
     title('Similarité du Bruit')
-    xticks(X[::50],rotation=-90)
+    xticks(X[::50],rotation=-85)
+    # Température :
+    c12=corrélation(T1,T2)
+    c12=str(c12)
+    c13=corrélation(T1,T3)
+    c13=str(c13)
+    c14=corrélation(T1,T4)
+    c14=str(c14)
+    c15=corrélation(T1,T5)
+    c15=str(c15)
+    c16=corrélation(T1,T6)
+    c16=str(c16)
+    c23=corrélation(T2,T3)
+    c23=str(c23)
+    c24=corrélation(T2,T4)
+    c24=str(c24)
+    c25=corrélation(T2,T5)
+    c25=str(c25)
+    c26=corrélation(T2,T6)
+    c26=str(c26)
+    c34=corrélation(T3,T4)
+    c34=str(c34)
+    c35=corrélation(T3,T5)
+    c35=str(c35)
+    c36=corrélation(T3,T6)
+    c36=str(c36)
+    c45=corrélation(T4,T5)
+    c45=str(c45)
+    c46=corrélation(T4,T6)
+    c46=str(c46)
+    c56=corrélation(T5,T6)
+    c56=str(c56)
+    f=figure(figsize=(20,6), dpi=80)
+    ax = f.add_subplot(111)
+    text(0.15,0.95,'c12 : '+c12+'; c13 : '+c13+'; c14 : '+c14+'; c15 : '+c15+'; c16 : '+c16+'; c23 : '+c23+'; c24 : '+c24+'; c25 : '+c25+'; c26 : '+c26+'; c34 : '+c34+'; c35 : '+c35+'; c36 : '+c36+'; c45 : '+c45+'; c46 : '+c46+'; c56 : '+c56,transform=ax.transAxes)
+    plot(X,T1,label='Capteur 1')
+    plot(X,T2,label='Capteur 2')
+    plot(X,T3,label='Capteur 3')
+    plot(X,T4,label='Capteur 4')
+    plot(X,T5,label='Capteur 5')
+    plot(X,T6,label='Capteur 6')
+    legend()
+    xlabel('temps')
+    title('Similarité du température')
+    xticks(X[::50],rotation=-85)
     show()
-    
