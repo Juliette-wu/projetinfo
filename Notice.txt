@@ -1,0 +1,24 @@
+Pour appeler notre programme depuis le cmd, le format est :
+
+-pour afficher des courbes montrant l’évolution d’une variable en fonction du temps :
+    python projet.py display <capteur> <variable> <start_time> <end_time>
+    
+    par exemple : capteur = “capteur1”, variable = “temp”, start_time = “2019-08-12-12-00-00” et end_time = “2019-08-24-12-00-00”
+
+-pour afficher des courbes montrant l’évolution d’une variable en fonction du temps avec les valeurs statistiques:
+    python projet.py displayStat <capteur> <variable> <start_time> <end_time>
+    
+    par exemple : capteur = “capteur5”, variable = “humidex”, start_time = “2019-08-12-12-00-00” et end_time = “2019-08-24-12-00-00”
+
+
+
+-pour affichez deux courbes, sur le même graphe, représentant les deux variables en fonction du temps et indiquer dans la légende la valeur de l’indice de corrélation :
+    python projet.py corrélation <capteur1> <capteur2> <variable> <start_time> <end_time>
+
+    par exemple : capteur1 = “capteur5”, capteur2 = “capteur6”, variable = “temp”, start_time = “2019-08-12-12-00-00” et end_time = “2019-08-24-12-00-00”
+
+
+-pour mesurer la similarité automatiquement et la montrer sur les courbes :
+    
+    python projet.py auto
+

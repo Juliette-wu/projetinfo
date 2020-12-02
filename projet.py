@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 #Pojet Info
 "Mesurer les similarités"
 
@@ -5,6 +7,7 @@ from math import *
 from matplotlib.pyplot import *
 from numpy import *
 from datetime import datetime
+from sys import argv
 
 def tab_capteurs():
     T1,T2,T3,T4,T5,T6=[],[],[],[],[],[]   #tableaux corespondant aux 6 capteurs
@@ -32,6 +35,15 @@ def tab_capteurs():
             T6.append(l[2:])
     E.close()
     return(T1,T2,T3,T4,T5,T6)
+
+def courbe_simple(X,Y,a,b):
+    f=figure()
+    ax = f.add_subplot(111)
+    plot(X,Y)
+    xlabel(a)
+    ylabel(b)
+    xticks(X[::50],rotation=-85)
+    show()
 
 def tri(L): #tri rapide
     if len(L)<=1:
@@ -72,7 +84,7 @@ def valeurs_stats(L):
     print('écart-type :',O)
     print('médiane :',Z)
     
-def courbe_simple(X,Y,a,b,c):
+def courbe_simple_stats(X,Y,a,b):
     m,M,E,O,Z=valeurs_stats(Y)
     m,M,E,O,Z=str(m),str(M),str(E),str(O),str(Z)
     f=figure()
@@ -81,19 +93,9 @@ def courbe_simple(X,Y,a,b,c):
     plot(X,Y)
     xlabel(a)
     ylabel(b)
-    title(c)
     xticks(X[::50],rotation=-85)
     show()
-
-def test(): #test de la fonction courbe_simple avec des valeurs du fichier csv
-    C1,C2,C3,C4,C5,C6=tab_capteurs()
-    X,Y=[],[]
-    n=len(C1)
-    for k in range(n):
-        Y.append(C1[k][1])
-        X.append(C1[k][5])
-    return(courbe_simple(X,Y,'temps','température','courbe'))
-    
+   
 def corrélation(L,P):
     n,S,S_L,S_P,D_L,D_P=len(L),0,0,0,0,0
     for k in range(n):
@@ -116,21 +118,21 @@ def humidex(T,H):
         h.append(round(T[i]+(5/9)*(6.112*10**(7.5*(T[i]/(237.7+T[i])))*(H[i]/100)-10)))
     return(h)    
 
-def graph_corrélation(X,L,P,a,l,p,t):
+def graph_corrélation(X,L,P,a,l,p):
     c=corrélation(L,P)
     c=str(c)
     f=figure()
     ax = f.add_subplot(111)
-    text(0.7,0.77,'corrélation : '+c,transform=ax.transAxes)
+    text(0.75,0.95,'corrélation : '+c,transform=ax.transAxes)
     plot(X,L,label=l)
     plot(X,P,label=p)
-    legend()
+    legend(loc = 'upper left')
     xlabel(a)
-    title(t)
+    title('Corrélation')
     xticks(X[::50],rotation=-85)
     show()
 
-def dt(t): #extrait la date sousformat utilisable pour faire des comparaisons
+def dt(t): #extrait la date sous format utilisable pour faire des comparaisons
     a,m,j=int(t[0:4]),int(t[5:7]),int(t[8:10])
     h,mi,s=int(t[11:13]),int(t[14:16]),int(t[17:19])
     return(datetime(a,m,j,h,mi,s))
@@ -147,17 +149,6 @@ def limitation_temps(C,td,tf):
 def limitation_temps_totale(td,tf): #td : date du début / tf : date de fin
     C1,C2,C3,C4,C5,C6=tab_capteurs()
     return(limitation_temps(C1,td,tf),limitation_temps(C2,td,tf),limitation_temps(C3,td,tf),limitation_temps(C4,td,tf),limitation_temps(C5,td,tf),limitation_temps(C6,td,tf))    
-
-def test2(td,tf): #test de la fonction graph_corrélation avec des valeurs du fichier csv entre deux instants
-    C1,C2,C3,C4,C5,C6=limitation_temps_totale(td,tf)
-    X,L,P=[],[],[]
-    n=len(C1)
-    for k in range(n):
-        L.append(C1[k][1])
-        T=C1[k][5]
-        X.append(T[5:19])
-        P.append(C2[k][1])
-    return(graph_corrélation(X,L,P,'temps','température C1','température C2','corrélation température entre C1 et C2'))
 
 def séparation(C,n):
     B,T,H,L,D=[],[],[],[],[]
@@ -254,3 +245,330 @@ def mesure_similarités(td,tf):
     #CO2 :
     graph(X,[D1,D2,D3,D4,D5,D6],'de la quantité de CO2 en ppm')
     show()
+
+if argv[1]=='display':
+    C1,C2,C3,C4,C5,C6=limitation_temps_totale(dt(argv[4]),dt(argv[5]))
+    X,Y=[],[]
+    if argv[2]=='capteur1':
+        n=len(C1)
+        for k in range(n):
+            X.append(C1[k][5])
+        B,T,H,L,D=séparation(C1,n)
+        if argv[3]=='noise':
+            Y=B
+            y='noise'
+        if argv[3]=='temp':
+            Y=T
+            y='temp'
+        if argv[3]=='humidity':
+            Y=H
+            y='humidity'
+        if argv[3]=='lum':
+            Y=L
+            y='lum'
+        if argv[3]=='co2':
+            Y=D
+            y='co2'
+        if argv[3]=='humidex':
+            Y=humidex(T,H)
+            y='humidex'
+    if argv[2]=='capteur2':
+        n=len(C2)
+        for k in range(n):
+            X.append(C2[k][5])
+        B,T,H,L,D=séparation(C2,n)
+        if argv[3]=='noise':
+            Y=B
+            y='noise'
+        if argv[3]=='temp':
+            Y=T
+            y='temp'
+        if argv[3]=='humidity':
+            Y=H
+            y='humidity'
+        if argv[3]=='lum':
+            Y=L
+            y='lum'
+        if argv[3]=='co2':
+            Y=D
+            y='co2'
+        if argv[3]=='humidex':
+            Y=humidex(T,H)
+            y='humidex'
+    if argv[2]=='capteur3':
+        n=len(C3)
+        for k in range(n):
+            X.append(C3[k][5])
+        B,T,H,L,D=séparation(C3,n)
+        if argv[3]=='noise':
+            Y=B
+            y='noise'
+        if argv[3]=='temp':
+            Y=T
+            y='temp'
+        if argv[3]=='humidity':
+            Y=H
+            y='humidity'
+        if argv[3]=='lum':
+            Y=L
+            y='lum'
+        if argv[3]=='co2':
+            Y=D
+            y='co2'
+        if argv[3]=='humidex':
+            Y=humidex(T,H)
+            y='humidex'
+    if argv[2]=='capteur4':
+        n=len(C4)
+        for k in range(n):
+            X.append(C4[k][5])
+        B,T,H,L,D=séparation(C4,n)
+        if argv[3]=='noise':
+            Y=B
+            y='noise'
+        if argv[3]=='temp':
+            Y=T
+            y='temp'
+        if argv[3]=='humidity':
+            Y=H
+            y='humidity'
+        if argv[3]=='lum':
+            Y=L
+            y='lum'
+        if argv[3]=='co2':
+            Y=D
+            y='co2'
+        if argv[3]=='humidex':
+            Y=humidex(T,H)
+            y='humidex'
+    if argv[2]=='capteur5':
+        n=len(C5)
+        for k in range(n):
+            X.append(C5[k][5])
+        B,T,H,L,D=séparation(C5,n)
+        if argv[3]=='noise':
+            Y=B
+            y='noise'
+        if argv[3]=='temp':
+            Y=T
+            y='temp'
+        if argv[3]=='humidity':
+            Y=H
+            y='humidity'
+        if argv[3]=='lum':
+            Y=L
+            y='lum'
+        if argv[3]=='co2':
+            Y=D
+            y='co2'
+        if argv[3]=='humidex':
+            Y=humidex(T,H)
+            y='humidex'
+    if argv[2]=='capteur6':
+        n=len(C6)
+        for k in range(n):
+            X.append(C6[k][5])
+        B,T,H,L,D=séparation(C6,n)
+        if argv[3]=='noise':
+            Y=B
+            y='noise'
+        if argv[3]=='temp':
+            Y=T
+            y='temp'
+        if argv[3]=='humidity':
+            Y=H
+            y='humidity'
+        if argv[3]=='lum':
+            Y=L
+            y='lum'
+        if argv[3]=='co2':
+            Y=D
+            y='co2'
+        if argv[3]=='humidex':
+            Y=humidex(T,H)
+            y='humidex'
+    courbe_simple(X,Y,'temps',y)
+
+if argv[1]=='displayStat':
+    C1,C2,C3,C4,C5,C6=limitation_temps_totale(dt(argv[4]),dt(argv[5]))
+    X,Y=[],[]
+    if argv[2]=='capteur1':
+        n=len(C1)
+        for k in range(n):
+            X.append(C1[k][5])
+        B,T,H,L,D=séparation(C1,n)
+        if argv[3]=='noise':
+            Y=B
+            y='noise'
+        if argv[3]=='temp':
+            Y=T
+            y='temp'
+        if argv[3]=='humidity':
+            Y=H
+            y='humidity'
+        if argv[3]=='lum':
+            Y=L
+            y='lum'
+        if argv[3]=='co2':
+            Y=D
+            y='co2'
+        if argv[3]=='humidex':
+            Y=humidex(T,H)
+            y='humidex'
+    if argv[2]=='capteur2':
+        n=len(C2)
+        for k in range(n):
+            X.append(C2[k][5])
+        B,T,H,L,D=séparation(C2,n)
+        if argv[3]=='noise':
+            Y=B
+            y='noise'
+        if argv[3]=='temp':
+            Y=T
+            y='temp'
+        if argv[3]=='humidity':
+            Y=H
+            y='humidity'
+        if argv[3]=='lum':
+            Y=L
+            y='lum'
+        if argv[3]=='co2':
+            Y=D
+            y='co2'
+        if argv[3]=='humidex':
+            Y=humidex(T,H)
+            y='humidex'
+    if argv[2]=='capteur3':
+        n=len(C3)
+        for k in range(n):
+            X.append(C3[k][5])
+        B,T,H,L,D=séparation(C3,n)
+        if argv[3]=='noise':
+            Y=B
+            y='noise'
+        if argv[3]=='temp':
+            Y=T
+            y='temp'
+        if argv[3]=='humidity':
+            Y=H
+            y='humidity'
+        if argv[3]=='lum':
+            Y=L
+            y='lum'
+        if argv[3]=='co2':
+            Y=D
+            y='co2'
+        if argv[3]=='humidex':
+            Y=humidex(T,H)
+            y='humidex'
+    if argv[2]=='capteur4':
+        n=len(C4)
+        for k in range(n):
+            X.append(C4[k][5])
+        B,T,H,L,D=séparation(C4,n)
+        if argv[3]=='noise':
+            Y=B
+            y='noise'
+        if argv[3]=='temp':
+            Y=T
+            y='temp'
+        if argv[3]=='humidity':
+            Y=H
+            y='humidity'
+        if argv[3]=='lum':
+            Y=L
+            y='lum'
+        if argv[3]=='co2':
+            Y=D
+            y='co2'
+        if argv[3]=='humidex':
+            Y=humidex(T,H)
+            y='humidex'
+    if argv[2]=='capteur5':
+        n=len(C5)
+        for k in range(n):
+            X.append(C5[k][5])
+        B,T,H,L,D=séparation(C5,n)
+        if argv[3]=='noise':
+            Y=B
+            y='noise'
+        if argv[3]=='temp':
+            Y=T
+            y='temp'
+        if argv[3]=='humidity':
+            Y=H
+            y='humidity'
+        if argv[3]=='lum':
+            Y=L
+            y='lum'
+        if argv[3]=='co2':
+            Y=D
+            y='co2'
+        if argv[3]=='humidex':
+            Y=humidex(T,H)
+            y='humidex'
+    if argv[2]=='capteur6':
+        n=len(C6)
+        for k in range(n):
+            X.append(C6[k][5])
+        B,T,H,L,D=séparation(C6,n)
+        if argv[3]=='noise':
+            Y=B
+            y='noise'
+        if argv[3]=='temp':
+            Y=T
+            y='temp'
+        if argv[3]=='humidity':
+            Y=H
+            y='humidity'
+        if argv[3]=='lum':
+            Y=L
+            y='lum'
+        if argv[3]=='co2':
+            Y=D
+            y='co2'
+        if argv[3]=='humidex':
+            Y=humidex(T,H)
+            y='humidex'
+    courbe_simple_stats(X,Y,'temps',y)
+
+if argv[1]=='corrélation':
+    C1,C2,C3,C4,C5,C6=limitation_temps_totale(dt(argv[5]),dt(argv[6]))
+    X=[]
+    n1=len(C1)
+    n2=len(C2)
+    n3=len(C3)
+    n4=len(C4)
+    n5=len(C5)
+    n6=len(C6)
+    n=min([n1,n2,n3,n4,n5,n6])
+    for i in range(n):
+        x=C1[i][5] #choix arbitraire de C1
+        X.append(x[5:19])
+    B1,T1,H1,L1,D1=séparation(C1,n)
+    B2,T2,H2,L2,D2=séparation(C2,n)
+    B3,T3,H3,L3,D3=séparation(C3,n)
+    B4,T4,H4,L4,D4=séparation(C4,n)
+    B5,T5,H5,L5,D5=séparation(C5,n)
+    B6,T6,H6,L6,D6=séparation(C6,n)
+    B=[B1,B2,B3,B4,B5,B6]
+    T=[T1,T2,T3,T4,T5,T6]
+    H=[H1,H2,H3,H4,H5,H6]
+    L=[L1,L2,L3,L4,L5,L6]
+    D=[D1,D2,D3,D4,D5,D6]
+    U=[humidex(T1,H1),humidex(T2,H2),humidex(T3,H3),humidex(T4,H4),humidex(T5,H5),humidex(T6,H6)]
+    if argv[4]=='noise':
+       graph_corrélation(X,B[int(argv[2][7])-1],B[int(argv[3][7])-1],'temps',argv[4]+' '+argv[2],argv[4]+' '+argv[3]) 
+    if argv[4]=='temp':
+       graph_corrélation(X,T[int(argv[2][7])-1],T[int(argv[3][7])-1],'temps',argv[4]+' '+argv[2],argv[4]+' '+argv[3])
+    if argv[4]=='humidity':
+       graph_corrélation(X,H[int(argv[2][7])-1],H[int(argv[3][7])-1],'temps',argv[4]+' '+argv[2],argv[4]+' '+argv[3])    
+    if argv[4]=='lum':
+       graph_corrélation(X,L[int(argv[2][7])-1],L[int(argv[3][7])-1],'temps',argv[4]+' '+argv[2],argv[4]+' '+argv[3]) 
+    if argv[4]=='co2':
+       graph_corrélation(X,D[int(argv[2][7])-1],D[int(argv[3][7])-1],'temps',argv[4]+' '+argv[2],argv[4]+' '+argv[3])  
+    if argv[4]=='humidex':
+       graph_corrélation(X,U[int(argv[2][7])-1],U[int(argv[3][7])-1],'temps',argv[4]+' '+argv[2],argv[4]+' '+argv[3]) 
+
+if argv[1]=='auto':
+    mesure_similarités(datetime(2019,8,12,12,0,0),datetime(2019,8,24,12,0,0))
